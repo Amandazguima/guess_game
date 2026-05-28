@@ -15,7 +15,7 @@ Este é um simples jogo de adivinhação desenvolvido utilizando o framework Fla
   
 ## Requisitos
 
-- Python 3.8+
+- Python 3.8+ - 3.12
 - Flask
 - Um banco de dados local (ou um mecanismo de armazenamento configurado em `current_app.db`)
 - node 18.17.0
