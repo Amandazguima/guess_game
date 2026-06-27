@@ -3,9 +3,17 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# REACT_APP_BACKEND_URL vazio faz o frontend usar URLs relativas (/create, /guess/<id>),
-# que são tratadas pelas rotas dedicadas no nginx.conf (proxy direto para o Flask).
-ENV REACT_APP_BACKEND_URL=""
+# REACT_APP_* é lido pelo Create React App EM TEMPO DE BUILD. Por isso, ao invés de
+# ENV (que ficaria exposta no runtime sem efeito no bundle), usamos ARG:
+#   - default "" → URLs relativas (/create, /guess/<id>) servidas pelo mesmo nginx;
+#     o nginx faz proxy para o backend. Ideal para deploy monolítico (frontend e
+#     backend no mesmo host, atrás do mesmo proxy).
+#   - valor absoluto (ex.: https://api.exemplo.com) → CORS direto ao backend
+#     hospedado em outro lugar. Exige que o backend aceite a origem do frontend.
+# Exemplo de override no compose:
+#   docker compose build --build-arg REACT_APP_BACKEND_URL=https://api.exemplo.com frontend
+ARG REACT_APP_BACKEND_URL=""
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 
 COPY frontend/package*.json ./
 RUN npm ci

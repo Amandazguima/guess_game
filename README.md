@@ -1,116 +1,43 @@
-# Jogo de Adivinhação (Guess Game) — Docker Compose
-
-Este repositório contém o jogo de adivinhação (Flask + React) **empacotado com Docker Compose**, pronto para rodar em qualquer máquina com Docker e Docker Compose instalados.
-
-A aplicação original (sem Docker) continua funcional — as instruções de uso via `venv` e `start-backend.sh` permanecem no final deste documento, em **"Uso sem Docker (legado)"**.
+Aqui está um exemplo de um arquivo `README.md` para o seu jogo:
 
 ---
 
-## Índice
+# Jogo de Adivinhação com Flask
 
-- [Visão geral da arquitetura](#visão-geral-da-arquitetura)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação e uso com Docker Compose](#instalação-e-uso-com-docker-compose)
-- [URLs de acesso](#urls-de-acesso)
-- [Atualização de componentes](#atualização-de-componentes)
-- [Resiliência](#resiliência)
-- [Decisões de design](#decisões-de-design)
-- [Solução de problemas](#solução-de-problemas)
-- [Uso sem Docker (legado)](#uso-sem-docker-legado)
+Este é um simples jogo de adivinhação desenvolvido utilizando o framework Flask. O jogador deve adivinhar uma senha criada aleatoriamente, e o sistema fornecerá feedback sobre o número de letras corretas e suas respectivas posições.
 
----
+## Funcionalidades
 
-## Visão geral da arquitetura
+- Criação de um novo jogo com uma senha fornecida pelo usuário.
+- Adivinhe a senha e receba feedback se as letras estão corretas e/ou em posições corretas.
+- As senhas são armazenadas  utilizando base64.
+- As adivinhações incorretas retornam uma mensagem com dicas.
+  
+## Requisitos
 
-Três serviços isolados se comunicam em uma rede bridge gerenciada pelo Docker Compose:
+- Python 3.8+ - 3.12
+- Flask
+- Um banco de dados local (ou um mecanismo de armazenamento configurado em `current_app.db`)
+- node 18.17.0
 
-```
-┌─────────────┐    /api/*    ┌─────────────┐    psycopg2    ┌─────────────┐
-│  frontend   │ ───────────► │   backend   │ ─────────────► │  postgres   │
-│  (NGINX)    │              │  (Flask)    │                │  (15-alpine)│
-│  porta 8080 │              │  porta 5000 │                │  porta 5432 │
-└─────────────┘              └─────────────┘                └─────────────┘
-      │                                                          │
-      │ serve /                                                  volume
-      ▼                                                       postgres_data
- /usr/share/nginx/html
-   (build do React)
-```
+## Instalação
 
-| Serviço    | Imagem base       | Porta interna | Porta publicada no host |
-|------------|-------------------|---------------|-------------------------|
-| `frontend` | `nginx:alpine`    | 80            | **8080**                |
-| `backend`  | `python:3.12-slim`| 5000          | **5050**                |
-| `postgres` | `postgres:15-alpine` | 5432       | **5433**                |
+1. Clone o repositório:
 
-> **Por que portas diferentes das "padrões"?** No macOS, as portas 80 e 5000 são frequentemente ocupadas por serviços do sistema (AirPlay/AirTunes escuta em 5000; alguns utilitários em 80). Para evitar conflito, o `docker-compose.yml` publica o frontend em 8080, o backend em 5050 e o postgres em 5433. Ajuste no arquivo se houver necessidade.
+   ```bash
+   git clone https://github.com/fams/guess_game.git
+   cd guess-game
+   ```
 
----
+2. Crie um ambiente virtual e ative-o:
 
-## Pré-requisitos
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   venv\Scripts\activate  # Windows
+   ```
 
-- **Docker** (Engine 20.10+ ou Docker Desktop)
-- **Docker Compose**:
-  - Plugin v2 (`docker compose`) **OU**
-  - Standalone (`docker-compose`)
-- **Git** (para clonar o repositório)
-
-### Verificando o ambiente
-
-```bash
-docker --version
-docker compose version   # plugin v2
-# OU
-docker-compose --version # standalone
-```
-
-Em Docker Desktop, o daemon já está em execução. Em Linux, pode ser necessário:
-```bash
-sudo systemctl start docker
-sudo usermod -aG docker $USER   # logout/login após isto
-```
-
----
-
-## Instalação e uso com Docker Compose
-
-### 1. Clone o repositório
-
-```bash
-git clone https://github.com/fams/guess_game.git
-cd guess_game
-```
-
-### 2. Construa as imagens e suba os containers
-
-```bash
-docker compose up -d --build
-# OU, se usar standalone:
-docker-compose up -d --build
-```
-
-A primeira execução demora alguns minutos (download das imagens base e build do frontend React). Nas execuções seguintes é instantâneo.
-
-### 3. Acompanhe o status
-
-```bash
-docker compose ps
-```
-
-Resultado esperado quando tudo está saudável:
-
-```
-NAME                    IMAGE                 STATUS                    PORTS
-guess_game-backend-1    guess_game-backend    Up (healthy)              0.0.0.0:5050->5000/tcp
-guess_game-frontend-1   guess_game-frontend   Up                        0.0.0.0:8080->80/tcp
-guess_game-postgres-1   postgres:15-alpine    Up (healthy)              0.0.0.0:5433->5432/tcp
-```
-
-### 4. Acesse a aplicação
-
-Veja a próxima seção — **[URLs de acesso](#urls-de-acesso)**.
-
-### 5. Parando os serviços
+3. Instale as dependências:
 
 ```bash
 docker compose down            # para containers, mantém volumes

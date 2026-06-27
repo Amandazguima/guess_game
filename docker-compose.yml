@@ -46,6 +46,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        # Default vazio = URLs relativas. O nginx do frontend faz proxy para o
+        # backend (comportamento monolítico, igual ao projeto original).
+        # Para apontar para um backend em outro host (deploy split), defina no
+        # shell antes de subir: export REACT_APP_BACKEND_URL=https://api.exemplo.com
+        # ou em um arquivo .env na raiz do projeto.
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-}
     ports:
       - "8080:80"
     depends_on:
